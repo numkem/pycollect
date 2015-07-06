@@ -1,0 +1,10 @@
+click==4.0
+colorclass==1.2.0
+pluginbase==0.3
+prettytable==0.7.2
+prompt-toolkit==0.42
+Pygments==2.0.2
+requests==2.7.0
+six==1.9.0
+wcwidth==0.1.4
+wheel==0.24.0
