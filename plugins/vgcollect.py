@@ -1,5 +1,5 @@
 import requests
-from command import Command
+from lib.command import Command
 
 
 class VgcollectCommand(Command):
@@ -29,7 +29,6 @@ class SearchCommand(VgcollectCommand):
                     results.append([item['game_id'], item['category_name'],
                                    item['name']])
             self.show_results(results)
-            print("{} results found.".format(len(results)))
         else:
             print("No result found.")
 

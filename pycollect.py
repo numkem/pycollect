@@ -7,8 +7,6 @@ from pluginbase import PluginBase
 import click
 import sys
 
-sys.path.insert(0, './lib')
-
 
 @click.command()
 @click.argument('module')
