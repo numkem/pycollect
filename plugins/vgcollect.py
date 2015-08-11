@@ -9,11 +9,25 @@ class VgcollectCommand(Command):
     api_key = 'abcdefg'
 
     def __init__(self, *args, **kwargs):
-        self.register_command('s', SearchCommand)
-        self.register_command('search', SearchCommand)
+        self.register_command('s', VgcollectSearchCommand)
+        self.register_command('search', VgcollectSearchCommand)
+        self.register_command('info', VgcollectInfoCommand)
 
 
-class SearchCommand(VgcollectCommand):
+class VgcollectInfoCommand(VgcollectCommand):
+	def run(self):
+		r = requests.get('/'.join([self.api_base_url, 'items', 
+						 self.args[0], self.api_key]))
+		if r.status_code == 200 and len(r.json()):
+			data = r.json()
+			
+			for key, value in data['results'].iteritems():
+				print('{}: {}'.format(self.underscore_camel_case_space(key), value))
+		else:
+			print("No result found.")
+
+
+class VgcollectSearchCommand(VgcollectCommand):
     result_header = ['ID', 'Category', 'Name']
 
     def run(self):
