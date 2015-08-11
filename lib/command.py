@@ -24,3 +24,9 @@ class Command(object):
 
     def register_command(self, command, cmdObj):
         self.commands[command] = cmdObj
+        
+    def underscore_camel_case_space(self, string):
+    	return ' '.join([w.capitalize() for w in string.split('_')])
+
+	def get_commands(self):
+		return self.commands
