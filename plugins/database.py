@@ -1,5 +1,6 @@
 from lib.command import Command
 from lib.models import *
+import re
 
 
 class DatabaseCommand(Command):
@@ -8,6 +9,24 @@ class DatabaseCommand(Command):
         self.register_command('delete', DatabaseDeleteCommand, shortcuts=['del'])
         self.register_command('show', DatabaseShowCommand, shortcuts=['sh'])
         self.register_command('edit', DatabaseEditCommand, shortcuts=['ed'])
+        self.register_command('find', DatabaseFindComand, shortcuts=['fi'])
+
+
+class DatabaseFindComand(Command):
+    def help(self):
+        self.show_help("find", "<search terms>",
+                       "Find a game already in the database, works like search command")
+
+    def run(self):
+        try:
+            all_games = self.db.filter(Game, {})
+            results = []
+            for g in all_games:
+                if re.search(".*{}.*".format(' '.join(self.args)), g.name, re.IGNORECASE):
+                    results.append((g.id, g.platform, g.name))
+            self.show_results(results)
+        except Game.DoesNotExist:
+            self.error("No results found")
 
 
 class DatabaseListCommand(Command):
@@ -55,7 +74,7 @@ class DatabaseEditCommand(Command):
             self.success("Game modified")
         except Game.DoesNotExist:
             self.error("No game matching this ID exists in the database")
-        except KeyError:
+        except (KeyError, IndexError):
             self.help()
 
 
