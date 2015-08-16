@@ -2,3 +2,5 @@
 .venv
 /build
 /pycollect.egg-info
+*.db
+*.csv
