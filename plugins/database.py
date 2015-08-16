@@ -4,9 +4,10 @@ from lib.models import *
 
 class DatabaseCommand(Command):
     def __init__(self):
-        self.register_command('list', DatabaseListCommand)
-        self.register_command('delete', DatabaseDeleteCommand)
-        self.register_command('show', DatabaseShowCommand)
+        self.register_command('list', DatabaseListCommand, shortcuts=['ls'])
+        self.register_command('delete', DatabaseDeleteCommand, shortcuts=['del'])
+        self.register_command('show', DatabaseShowCommand, shortcuts=['sh'])
+        self.register_command('edit', DatabaseEditCommand, shortcuts=['ed'])
 
 
 class DatabaseListCommand(Command):
@@ -30,6 +31,28 @@ class DatabaseDeleteCommand(Command):
             self.db.delete(game)
             self.db.commit()
             print("Game deleted")
+        except Game.DoesNotExist:
+            print("No game matching this ID exists in the database")
+        except KeyError:
+            self.help()
+
+
+class DatabaseEditCommand(Command):
+    def help(self):
+        self.show_help("edit", "<ID of game> <key> <value>",
+        			   "Assign the <value> to the <key> for the game provided.\n"
+                       + "If the value doesn't exists, it will be created.")
+
+    def run(self):
+        try:
+            game = self.db.get(Game, {'id': self.args[0]})
+            key = self.args[1]
+            value = ' '.join(self.args[2:])
+
+            setattr(game, key, value)
+            self.db.save(game)
+            self.db.commit()
+            print("Game modified")
         except Game.DoesNotExist:
             print("No game matching this ID exists in the database")
         except KeyError:
