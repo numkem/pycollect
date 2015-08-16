@@ -5,6 +5,7 @@ class Command(object):
     result_header = ['ID', 'Category', 'Name']
     args = []
     commands = {}
+    shortcuts = {}
 
     def parse(self, text=""):
         self.args = text.split(' ')[1:]
@@ -22,11 +23,14 @@ class Command(object):
     def run(self):
         print("Not implemented!")
 
-    def register_command(self, command, cmdObj):
+    def register_command(self, command, cmdObj, shortcuts=[]):
         self.commands[command] = cmdObj
-        
-    def underscore_camel_case_space(self, string):
-    	return ' '.join([w.capitalize() for w in string.split('_')])
 
-	def get_commands(self):
-		return self.commands
+        for s in shortcuts:
+            self.shortcuts[s] = cmdObj
+
+    def underscore_camel_case_space(self, string):
+        return ' '.join([w.capitalize() for w in string.split('_')])
+
+    def get_commands(self):
+        return self.commands

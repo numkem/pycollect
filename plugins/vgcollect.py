@@ -9,9 +9,8 @@ class VgcollectCommand(Command):
     api_key = 'abcdefg'
 
     def __init__(self, *args, **kwargs):
-        self.register_command('s', VgcollectSearchCommand)
-        self.register_command('search', VgcollectSearchCommand)
-        self.register_command('info', VgcollectInfoCommand)
+        self.register_command('search', VgcollectSearchCommand, shortcuts=['s'])
+        self.register_command('info', VgcollectInfoCommand, shortcuts=['i'])
 
 
 class VgcollectInfoCommand(VgcollectCommand):
@@ -20,7 +19,7 @@ class VgcollectInfoCommand(VgcollectCommand):
 						 self.args[0], self.api_key]))
 		if r.status_code == 200 and len(r.json()):
 			data = r.json()
-			
+
 			for key, value in data['results'].iteritems():
 				print('{}: {}'.format(self.underscore_camel_case_space(key), value))
 		else:
@@ -45,5 +44,13 @@ class VgcollectSearchCommand(VgcollectCommand):
             self.show_results(results)
         else:
             print("No result found.")
+
+
+class VgcollectAddDatabaseCommand(VgcollectCommand):
+    db = None
+
+    def run(self, dbFilename):
+        
+
 
 main_class = VgcollectCommand

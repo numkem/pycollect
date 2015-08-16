@@ -16,21 +16,27 @@ def main():
         searchpath=['./plugins'])
     history = History()
     all_commands = dict()
+    all_shortcuts = dict()
 
 	# Load all plugins
     with plugin_source:
         for file in os.listdir('./plugins'):
             if '.py' in file and '.pyc' not in file:
-				mod = plugin_source.load_plugin(file.replace('.py', ''))
-				cmd = mod.main_class()
-				
-				# Add the registered commands to the commands dict
-				all_commands.update(cmd.commands)
+                mod = plugin_source.load_plugin(file.replace('.py', ''))
+                cmd = mod.main_class()
+
+                # Add the registered commands to the commands dict
+                all_commands.update(cmd.commands)
+                all_shortcuts.update(cmd.shortcuts)
     while True:
         try:
             text = get_input(u'> ', history=history,
                              completer=WordCompleter(all_commands.keys()))
-            command = cmd.commands.get(text.split(' ')[0])()
+            try:
+                command = all_commands.get(text.split(' ')[0])()
+            except TypeError:
+                # Try to use a shortcut instead
+                command = all_shortcuts.get(text.split(' ')[0])()
 
             command.parse(text)
             command.run()
