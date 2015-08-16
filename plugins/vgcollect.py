@@ -44,11 +44,11 @@ class VgcollectAddCommand(VgcollectCommand):
             game = Game(item)
             self.db.save(game)
             self.db.commit()
-            print("Game added")
+            self.success("Game added")
         except IndexError:
             self.help()
         except KeyError:
-            print("No result found")
+            self.error("No result found")
 
 
 
@@ -60,7 +60,7 @@ class VgcollectInfoCommand(VgcollectCommand):
             for key, value in item.iteritems():
                 print('{}: {}'.format(self.underscore_camel_case_space(key), value))
         except KeyError:
-            print("No result found")
+            self.error("No result found")
 
 
 class VgcollectSearchCommand(VgcollectCommand):
@@ -93,7 +93,7 @@ class VgcollectSearchCommand(VgcollectCommand):
                     pass
             self.show_results(results)
         except TypeError:
-            print("No results found")
+            self.error("No results found")
 
 
 main_class = VgcollectCommand

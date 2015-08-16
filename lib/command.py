@@ -1,4 +1,7 @@
 from prettytable import PrettyTable
+from blessings import Terminal
+
+term = Terminal()
 
 
 class Command(object):
@@ -40,3 +43,9 @@ class Command(object):
 
     def show_help(self, command, args, help_msg):
         print("{} {}\n\n{}".format(command, args, help_msg))
+
+    def success(self, msg):
+        print(term.green(msg))
+
+    def error(self, msg):
+        print(term.red(msg))

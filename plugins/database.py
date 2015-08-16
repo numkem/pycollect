@@ -17,7 +17,7 @@ class DatabaseListCommand(Command):
             results = [(g.id, g.platform, g.name) for g in all_games]
             self.show_results(results)
         except Game.DoesNotExist:
-            print("Database doesn't contain any games.")
+            self.error("Database doesn't contain any games.")
 
 
 class DatabaseDeleteCommand(Command):
@@ -30,9 +30,9 @@ class DatabaseDeleteCommand(Command):
             game = self.db.get(Game, {'id': self.args[0]})
             self.db.delete(game)
             self.db.commit()
-            print("Game deleted")
+            self.success("Game deleted")
         except Game.DoesNotExist:
-            print("No game matching this ID exists in the database")
+            self.error("No game matching this ID exists in the database")
         except KeyError:
             self.help()
 
@@ -52,9 +52,9 @@ class DatabaseEditCommand(Command):
             setattr(game, key, value)
             self.db.save(game)
             self.db.commit()
-            print("Game modified")
+            self.success("Game modified")
         except Game.DoesNotExist:
-            print("No game matching this ID exists in the database")
+            self.error("No game matching this ID exists in the database")
         except KeyError:
             self.help()
 

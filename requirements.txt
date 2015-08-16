@@ -1,3 +1,4 @@
+blessings==1.6
 blitzdb==0.2.12
 click==4.0
 colorclass==1.2.0
