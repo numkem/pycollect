@@ -10,10 +10,9 @@ class VgcollectCommand(Command):
     api_key = 'abcdefg'
 
     def __init__(self, *args, **kwargs):
-        self.register_command('s', VgcollectSearchCommand)
-        self.register_command('search', VgcollectSearchCommand, shortcuts=['s'])
-        self.register_command('info', VgcollectInfoCommand, shortcuts=['i'])
-        self.register_command('add', VgcollectAddCommand)
+        self.register_command('search', VgcollectSearchCommand, shortcuts=['se'])
+        self.register_command('info', VgcollectInfoCommand, shortcuts=['in'])
+        self.register_command('add', VgcollectAddCommand, shortcuts=['ad'])
 
     def search_items(self, args):
         r = requests.get(
