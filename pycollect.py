@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import print_function
 from prompt_toolkit.shortcuts import get_input
 from prompt_toolkit.history import History
@@ -10,6 +10,9 @@ import sys
 import os
 
 DEFAULT_DB_FILENAME = os.path.join(os.getcwd(), 'pycollect.db')
+PLUGIN_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'plugins')
+
 
 @click.option('--db', 'db_filename', default=DEFAULT_DB_FILENAME,
               help="Database filename")
@@ -17,7 +20,7 @@ DEFAULT_DB_FILENAME = os.path.join(os.getcwd(), 'pycollect.db')
 def main(db_filename):
     plugin_base = PluginBase(package="pycollect.plugins")
     plugin_source = plugin_base.make_plugin_source(
-        searchpath=['./plugins'])
+        searchpath=[PLUGIN_DIR])
     history = History()
     all_commands = dict()
     all_shortcuts = dict()
@@ -27,7 +30,7 @@ def main(db_filename):
 
     # Load all plugins
     with plugin_source:
-        for file in os.listdir('./plugins'):
+        for file in os.listdir(PLUGIN_DIR):
             if '.py' in file and '.pyc' not in file:
                 mod = plugin_source.load_plugin(file.replace('.py', ''))
                 cmd = mod.main_class()
@@ -47,8 +50,8 @@ def main(db_filename):
 
             command.parse(text, db=db)
             command.run()
-        #except TypeError:
-        #    print("Error: Command not found!")
+        except TypeError:
+            print("Error: Command not found!")
         except KeyboardInterrupt:
             pass
         except EOFError:
