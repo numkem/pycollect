@@ -4,10 +4,13 @@ from prompt_toolkit.shortcuts import get_input
 from prompt_toolkit.history import History
 from prompt_toolkit.contrib.completers import WordCompleter
 from pluginbase import PluginBase
-from blitzdb import FileBackend
+from pymongo import MongoClient
 import click
 import sys
 import os
+
+from lib.command import UsageException
+
 
 DEFAULT_DB_FILENAME = os.path.join(os.getcwd(), 'pycollect.db')
 PLUGIN_DIR = os.path.join(
@@ -26,7 +29,8 @@ def main(db_filename):
     all_shortcuts = dict()
 
     # Initialize database
-    db = FileBackend(db_filename)
+    client = MongoClient()
+    db = client['pycollect']
 
     # Load all plugins
     with plugin_source:
@@ -49,9 +53,14 @@ def main(db_filename):
                 command = all_shortcuts.get(text.split(' ')[0])()
 
             command.parse(text, db=db)
-            command.run()
+            try:
+                command.run()
+            except (IndexError, KeyError):
+                raise UsageException()
         except TypeError:
             print("Error: Command not found!")
+        except UsageException:
+            command.help()
         except KeyboardInterrupt:
             pass
         except EOFError:

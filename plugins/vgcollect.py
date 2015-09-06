@@ -1,6 +1,9 @@
 import requests
-from lib.command import Command
-from lib.models import Game
+from blessings import Terminal
+
+from lib.command import Command, UsageException
+
+term = Terminal()
 
 
 class VgcollectCommand(Command):
@@ -25,41 +28,47 @@ class VgcollectCommand(Command):
 
     def get_item(self, item_id):
         r = requests.get('/'.join([self.api_base_url, 'items',
-						 item_id, self.api_key]))
+                                   item_id, self.api_key]))
         if r.status_code == 200 and len(r.json()):
             return r.json()['results']
 
 
 class VgcollectAddCommand(VgcollectCommand):
-    def help(self):
-        self.showHelp('add', '<ID from search command>',
-                      'This command adds the item specified into the internal database.')
+    help_command = 'add'
+    help_args = ['ID from search command']
+    help_msg = \
+        """
+        This command adds the item specified into the internal database.
+        """
 
     def run(self):
         try:
             if not self.args[0].isdigit:
-                self.show_help()
-            item = self.get_item(self.args[0])
-            game = Game(item)
-            self.db.save(game)
-            self.db.commit()
-            self.success("Game added")
+                raise UsageException()
         except IndexError:
-            self.help()
-        except KeyError:
-            self.error("No result found")
+            raise UsageException()
+        item = self.get_item(self.args[0])
 
+        # Check if the game is already in the database
+        if self.db.games.find_one({'id:': self.args[0]}) is None:
+            self.db.games.insert_one(item)
+
+            self.success("Game added")
+        else:
+            self.error("Game already in database, try editing it instead.")
 
 
 class VgcollectInfoCommand(VgcollectCommand):
-    def run(self):
-        try:
-            item = self.get_item(self.args[0])
+    help_command = 'info'
+    help_args = ['ID from search command']
+    help_msg = \
+        """
+        Show all details of an item from the remote database.
+        """
 
-            for key, value in item.iteritems():
-                print('{}: {}'.format(self.underscore_camel_case_space(key), value))
-        except KeyError:
-            self.error("No result found")
+    def run(self):
+        item = self.get_item(self.args[0])
+        self.show_dict(item)
 
 
 class VgcollectSearchCommand(VgcollectCommand):
@@ -84,10 +93,10 @@ class VgcollectSearchCommand(VgcollectCommand):
                         if len(filters):
                             if item['category_slug'] in filters:
                                 results.append([item['game_id'], item['category_name'],
-                                            item['name']])
+                                                item['name']])
                         else:
                             results.append([item['game_id'], item['category_name'],
-                                        item['name']])
+                                            item['name']])
                 except KeyError:
                     pass
             self.show_results(results)

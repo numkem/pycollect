@@ -42,10 +42,24 @@ class Command(object):
         return self.commands
 
     def show_help(self, command, args, help_msg):
-        print("{} {}\n\n{}".format(command, args, help_msg))
+        args_str = " ".join(["<{}>".format(a) for a in args])
+        print("{} {}\n{}".format(command, args_str, help_msg))
+
+    def help(self):
+        self.show_help(self.help_command, self.help_args, self.help_msg)
 
     def success(self, msg):
         print(term.green(msg))
 
     def error(self, msg):
         print(term.red(msg))
+
+    def show_dict(self, d):
+        for key, value in d.iteritems():
+            print('{}{}:{} {}'.format(term.blue,
+                                      self.underscore_camel_case_space(key),
+                                      term.normal, value))
+
+
+class UsageException(Exception):
+    pass

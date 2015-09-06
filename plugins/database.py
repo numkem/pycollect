@@ -1,5 +1,4 @@
 from lib.command import Command
-from lib.models import *
 import re
 
 
@@ -13,85 +12,79 @@ class DatabaseCommand(Command):
 
 
 class DatabaseFindComand(Command):
-    def help(self):
-        self.show_help("find", "<search terms>",
-                       "Find a game already in the database, works like search command")
+    help_command = 'find'
+    help_args = ['search terms']
+    help_msg = \
+        """
+        Find a game already in the database, works like search command.
+        """
 
     def run(self):
-        try:
-            all_games = self.db.filter(Game, {})
-            results = []
-            for g in all_games:
-                if re.search(".*{}.*".format(' '.join(self.args)), g.name, re.IGNORECASE):
-                    results.append((g.id, g.platform, g.name))
-            self.show_results(results)
-        except Game.DoesNotExist:
-            self.error("No results found")
+        regex = re.compile(self.args[0], re.IGNORECASE)
+        games = self.db.games.find({'name': regex})
+        results = [(g['id'], g['platform'], g['name']) for g in games]
+        self.show_results(results)
 
 
 class DatabaseListCommand(Command):
+    help_command = 'list'
+    help_args = []
+    help_msg = \
+        """
+        List all the games currently in the local database
+        """
+
     def run(self):
-        try:
-            all_games = self.db.filter(Game, {})
-            results = [(g.id, g.platform, g.name) for g in all_games]
-            self.show_results(results)
-        except Game.DoesNotExist:
-            self.error("Database doesn't contain any games.")
+        all_games = list(self.db.games.find())
+        results = [(g['id'], g['platform'], g['name']) for g in all_games]
+        self.show_results(results)
 
 
 class DatabaseDeleteCommand(Command):
-    def help(self):
-        self.show_help("delete", "<ID of game>",
-                       "Delete the game matching the ID given from the database.")
+    help_command = 'delete'
+    help_args = ['ID of game']
+    help_msg = \
+        """
+        Delete the game matching the ID given from the database.
+        """
 
     def run(self):
-        try:
-            game = self.db.get(Game, {'id': self.args[0]})
-            self.db.delete(game)
-            self.db.commit()
-            self.success("Game deleted")
-        except Game.DoesNotExist:
-            self.error("No game matching this ID exists in the database")
-        except KeyError:
-            self.help()
+        self.db.games.remove({'id': self.args[0]})
+        self.success("Game deleted")
 
 
 class DatabaseEditCommand(Command):
-    def help(self):
-        self.show_help("edit", "<ID of game> <key> <value>",
-        			   "Assign the <value> to the <key> for the game provided.\n"
-                       + "If the value doesn't exists, it will be created.")
+    help_command = 'edit'
+    help_args = ['ID of game', 'key', 'value']
+    help_msg = \
+        """
+        Assign the <value> to the <key> for the game provided.
+        If the value doesn't exists, it will be created.
+        """
 
     def run(self):
-        try:
-            game = self.db.get(Game, {'id': self.args[0]})
+        game = self.db.games.find_one({'id': self.args[0]})
+        if game is None:
+            self.error("No game matching this ID exists in the database")
+        else:
             key = self.args[1]
             value = ' '.join(self.args[2:])
+            game[key] = value
 
-            setattr(game, key, value)
-            self.db.save(game)
-            self.db.commit()
+            self.db.games.replace_one({'_id': game['_id']}, game)
             self.success("Game modified")
-        except Game.DoesNotExist:
-            self.error("No game matching this ID exists in the database")
-        except (KeyError, IndexError):
-            self.help()
 
 
 class DatabaseShowCommand(Command):
-    def help(self):
-        self.show_help("show", "<ID of game>",
-    		           "Show all the data from a game already in the database.")
+    help_command = 'show'
+    help_args = ['ID of game']
+    help_msg = \
+        """
+        Show all the data from a game already in the database.
+        """
 
     def run(self):
-        try:
-            game = dict(self.db.get(Game, {'id': self.args[0]}))
-            for key, value in game.iteritems():
-                print('{}: {}'.format(self.underscore_camel_case_space(key), value))
-        except Game.DoesNotExist:
-            print("No game matching this ID exists in the database")
-        except KeyError:
-            self.help()
-
+        game = self.db.games.find_one({'id': self.args[0]})
+        self.show_dict(game)
 
 main_class = DatabaseCommand
