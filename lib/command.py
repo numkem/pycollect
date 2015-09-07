@@ -9,7 +9,6 @@ class Command(object):
     args = []
     commands = {}
     shortcuts = {}
-    db = None
 
     def parse(self, text="", **kwargs):
         self.args = text.split(' ')[1:]
@@ -48,9 +47,11 @@ class Command(object):
     def help(self):
         self.show_help(self.help_command, self.help_args, self.help_msg)
 
+    @classmethod
     def success(self, msg):
         print(term.green(msg))
 
+    @classmethod
     def error(self, msg):
         print(term.red(msg))
 
