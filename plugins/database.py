@@ -1,6 +1,8 @@
 from lib.command import Command
-import re
+from pycollect import db
+from tinydb import where
 
+games = db.table('games')
 
 class DatabaseCommand(Command):
     def __init__(self):
@@ -20,8 +22,7 @@ class DatabaseFindComand(Command):
         """
 
     def run(self):
-        regex = re.compile(self.args[0], re.IGNORECASE)
-        games = self.db.games.find({'name': regex})
+        games = games.search(where('name')).matches("*{}*".format(self.args[0]))
         results = [(g['id'], g['platform'], g['name']) for g in games]
         self.show_results(results)
 
@@ -35,7 +36,7 @@ class DatabaseListCommand(Command):
         """
 
     def run(self):
-        all_games = list(self.db.games.find())
+        all_games = games.all()
         results = [(g['id'], g['platform'], g['name']) for g in all_games]
         self.show_results(results)
 
@@ -49,8 +50,8 @@ class DatabaseDeleteCommand(Command):
         """
 
     def run(self):
-        self.db.games.remove({'id': self.args[0]})
-        self.success("Game deleted")
+        games.remove(where('id') == self.args[0])
+        self.success("Game deleted.")
 
 
 class DatabaseEditCommand(Command):
@@ -63,16 +64,15 @@ class DatabaseEditCommand(Command):
         """
 
     def run(self):
-        game = self.db.games.find_one({'id': self.args[0]})
-        if game is None:
-            self.error("No game matching this ID exists in the database")
+        game = games.search(where('id') == self.args[0])[0]
+        if not len(game):
+            self.error("No game matching this ID exists in the database.")
         else:
             key = self.args[1]
             value = ' '.join(self.args[2:])
-            game[key] = value
 
-            self.db.games.replace_one({'_id': game['_id']}, game)
-            self.success("Game modified")
+            games.update({key: value}, where('id') == self.args[0])
+            self.success("Game modified.")
 
 
 class DatabaseShowCommand(Command):
@@ -84,7 +84,7 @@ class DatabaseShowCommand(Command):
         """
 
     def run(self):
-        game = self.db.games.find_one({'id': self.args[0]})
+        game = games.search(where('id') == self.args[0])[0]
         self.show_dict(game)
 
 main_class = DatabaseCommand

@@ -1,10 +1,12 @@
 import requests
 from blessings import Terminal
+from tinydb import where
 
 from lib.command import Command, UsageException
+from pycollect import db
 
 term = Terminal()
-
+games = db.table('games')
 
 class VgcollectCommand(Command):
     excluded_category_id = ['29', '380', '381', '382', '383',
@@ -16,6 +18,7 @@ class VgcollectCommand(Command):
         self.register_command('search', VgcollectSearchCommand, shortcuts=['se'])
         self.register_command('info', VgcollectInfoCommand, shortcuts=['in'])
         self.register_command('add', VgcollectAddCommand, shortcuts=['ad'])
+
 
     def search_items(self, args):
         r = requests.get(
@@ -41,21 +44,44 @@ class VgcollectAddCommand(VgcollectCommand):
         This command adds the item specified into the internal database.
         """
 
+    """
+    extract_fields: Check all the fields given to the command for a pattern
+        like key=value
+    """
+    def extract_fields(self, arguments):
+        fields = {}
+        items = []
+        for arg in self.args:
+            try:
+                if '=' in arg:
+                    key, value = arg.split('=')
+                    fields[key] = value
+                if arg.isdigit():
+                    items.append(arg)
+            except ValueError:
+                raise UsageException
+        return (items, fields)
+
     def run(self):
-        try:
-            if not self.args[0].isdigit:
-                raise UsageException()
-        except IndexError:
+        # Fields can be set in the format key=value, they will be added to
+        # the game
+        item_ids, fields = self.extract_fields(self.args)
+
+        if not len(item_ids):
             raise UsageException()
-        item = self.get_item(self.args[0])
 
-        # Check if the game is already in the database
-        if self.db.games.find_one({'id:': self.args[0]}) is None:
-            self.db.games.insert_one(item)
+        for item_id in item_ids:
+            item = self.get_item(item_id)
 
-            self.success("Game added")
-        else:
-            self.error("Game already in database, try editing it instead.")
+            # Check if the game is already in the database
+            if len(games.search(where('id') == item_id)):
+                self.error("Game #{} already in database.".format(item_id))
+            else:
+                games.insert(item)
+                if bool(fields):
+                    games.update(fields, where('id') == item_id)
+
+                self.success("Game added.")
 
 
 class VgcollectInfoCommand(VgcollectCommand):
@@ -72,6 +98,17 @@ class VgcollectInfoCommand(VgcollectCommand):
 
 
 class VgcollectSearchCommand(VgcollectCommand):
+    help_command = 'search'
+    help_args = ['keywords to search for']
+    help_msg = \
+        """
+        Search remote database for games with the provided keywords.
+
+        Filtering by console name can be done by using the a '|'.
+        Examples:
+            search halo | xbox
+            search halo | xbox360
+        """
     result_header = ['ID', 'Category', 'Name']
 
     def run(self):
@@ -92,16 +129,18 @@ class VgcollectSearchCommand(VgcollectCommand):
                     if item['category_id'] not in self.excluded_category_id:
                         if len(filters):
                             if item['category_slug'] in filters:
-                                results.append([item['game_id'], item['category_name'],
+                                results.append([item['game_id'],
+                                                item['category_name'],
                                                 item['name']])
                         else:
-                            results.append([item['game_id'], item['category_name'],
+                            results.append([item['game_id'],
+                                            item['category_name'],
                                             item['name']])
                 except KeyError:
                     pass
             self.show_results(results)
         except TypeError:
-            self.error("No results found")
+            self.help()
 
 
 main_class = VgcollectCommand
