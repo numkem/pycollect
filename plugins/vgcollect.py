@@ -140,7 +140,7 @@ class VgcollectSearchCommand(VgcollectCommand):
                     pass
             self.show_results(results)
         except TypeError:
-            self.help()
+            self.error("No result found.")
 
 
 main_class = VgcollectCommand
