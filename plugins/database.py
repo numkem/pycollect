@@ -84,7 +84,10 @@ class DatabaseShowCommand(Command):
         """
 
     def run(self):
-        game = games.search(where('id') == self.args[0])[0]
-        self.show_dict(game)
+        try:
+            game = games.search(where('id') == self.args[0])[0]
+            self.show_dict(game)
+        except IndexError:
+            self.error("Game #{} not in database.".format(self.args[0]))
 
 main_class = DatabaseCommand
