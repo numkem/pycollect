@@ -22,8 +22,8 @@ class DatabaseFindComand(Command):
         """
 
     def run(self):
-        games = games.search(where('name')).matches("*{}*".format(self.args[0]))
-        results = [(g['id'], g['platform'], g['name']) for g in games]
+        local_games = games.search(where('name').matches(".*{}.*".format(self.args[0])))
+        results = [(g['id'], g['platform'], g['name']) for g in local_games]
         self.show_results(results)
 
 
