@@ -1,5 +1,6 @@
 from prettytable import PrettyTable
 from blessings import Terminal
+import re
 
 term = Terminal()
 
@@ -33,6 +34,9 @@ class Command(object):
 
         for s in shortcuts:
             self.shortcuts[s] = cmdObj
+
+    def _regex_search_ignorecase(self, input, needle):
+        return re.search(needle, input, re.IGNORECASE)
 
     def underscore_camel_case_space(self, string):
         return ' '.join([w.capitalize() for w in string.split('_')])

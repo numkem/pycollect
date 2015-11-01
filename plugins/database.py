@@ -22,7 +22,9 @@ class DatabaseFindComand(Command):
         """
 
     def run(self):
-        local_games = games.search(where('name').matches(".*{}.*".format(self.args[0])))
+        local_games = games.search(where('name')
+                                   .test(self._regex_search_ignorecase, r'{}'
+                                         .format(self.args[0])))
         results = [(g['id'], g['platform'], g['name']) for g in local_games]
         self.show_results(results)
 
