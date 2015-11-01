@@ -81,7 +81,7 @@ class VgcollectAddCommand(VgcollectCommand):
                 if bool(fields):
                     games.update(fields, where('id') == item_id)
 
-                self.success("Game added.")
+                self.success("Game #{} added.".format(item_id))
 
 
 class VgcollectInfoCommand(VgcollectCommand):
